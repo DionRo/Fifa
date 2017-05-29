@@ -38,3 +38,18 @@ C:\Users\Dion Rodie\Desktop\ProjectFifaV2\ProjectFifaV2\obj\x86\Debug\ProjectFif
 C:\Users\Dion Rodie\Desktop\ProjectFifaV2\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.frmRanking.resources
 C:\Users\Dion Rodie\Desktop\ProjectFifaV2\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.Properties.Resources.resources
 C:\Users\Dion Rodie\Desktop\ProjectFifaV2\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.csproj.GenerateResource.Cache
+D:\School\P4\FifaCsharp\ProjectFifaV2\bin\Debug\db.mdf
+D:\School\P4\FifaCsharp\ProjectFifaV2\bin\Debug\db_log.ldf
+D:\School\P4\FifaCsharp\ProjectFifaV2\bin\Debug\ProjectFifaV2.exe.config
+D:\School\P4\FifaCsharp\ProjectFifaV2\bin\Debug\ProjectFifaV2.exe
+D:\School\P4\FifaCsharp\ProjectFifaV2\bin\Debug\ProjectFifaV2.pdb
+D:\School\P4\FifaCsharp\ProjectFifaV2\bin\Debug\System.Data.SqlServerCe.dll
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.csprojResolveAssemblyReference.cache
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.frmAdmin.resources
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.frmLogin.resources
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.frmPlayer.resources
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.frmRanking.resources
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.Properties.Resources.resources
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.csproj.GenerateResource.Cache
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.exe
+D:\School\P4\FifaCsharp\ProjectFifaV2\obj\x86\Debug\ProjectFifaV2.pdb
