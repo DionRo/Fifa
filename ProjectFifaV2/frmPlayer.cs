@@ -57,7 +57,7 @@ namespace ProjectFifaV2
         {
             bool hasPassed;
             //This is the deadline for filling in the predictions
-            DateTime deadline = new DateTime(2014, 06, 12);
+            DateTime deadline = new DateTime(2018, 06, 12);
             DateTime curTime = DateTime.Now;
             int result = DateTime.Compare(deadline, curTime);
 
@@ -87,10 +87,12 @@ namespace ProjectFifaV2
             {
                 DataRow dataRowHome = hometable.Rows[i];
                 DataRow dataRowAway = awayTable.Rows[i];
+
                 ListViewItem lstItem = new ListViewItem(dataRowHome["TeamName"].ToString());
                 lstItem.SubItems.Add(dataRowHome["HomeTeamScore"].ToString());
                 lstItem.SubItems.Add(dataRowAway["AwayTeamScore"].ToString());
                 lstItem.SubItems.Add(dataRowAway["TeamName"].ToString());
+
                 lvOverview.Items.Add(lstItem);
             }
         }
@@ -100,20 +102,24 @@ namespace ProjectFifaV2
             dbh.TestConnection();
             dbh.OpenConnectionToDB();
 
-            DataTable hometable = dbh.FillDT("SELECT tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID");
-            DataTable awayTable = dbh.FillDT("SELECT tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID");
+            DataTable hometable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID");
+            DataTable awayTable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID");
 
             dbh.CloseConnectionToDB();
+            txtBoxList = new List<TextBox>();
 
             for (int i = 0; i < hometable.Rows.Count; i++)
             {
                 DataRow dataRowHome = hometable.Rows[i];
                 DataRow dataRowAway = awayTable.Rows[i];
-                
+
                 Label lblHomeTeam = new Label();
                 Label lblAwayTeam = new Label();
                 TextBox txtHomePred = new TextBox();
                 TextBox txtAwayPred = new TextBox();
+
+                txtBoxList.Add(txtHomePred);
+                txtBoxList.Add(txtAwayPred);
 
                 lblHomeTeam.TextAlign = ContentAlignment.BottomRight;
                 lblHomeTeam.Text = dataRowHome["TeamName"].ToString();
@@ -123,10 +129,12 @@ namespace ProjectFifaV2
                 txtHomePred.Text = "0";
                 txtHomePred.Location = new Point(lblHomeTeam.Width, lblHomeTeam.Top - 3);
                 txtHomePred.Width = 40;
+                txtHomePred.Tag = dataRowHome["Game_id"].ToString();
 
                 txtAwayPred.Text = "0";
                 txtAwayPred.Location = new Point(txtHomePred.Width + lblHomeTeam.Width, txtHomePred.Top);
                 txtAwayPred.Width = 40;
+                txtAwayPred.Tag = dataRowAway["Game_id"].ToString();
 
                 lblAwayTeam.Text = dataRowAway["TeamName"].ToString();
                 lblAwayTeam.Location = new Point(txtHomePred.Width + lblHomeTeam.Width + txtAwayPred.Width, txtHomePred.Top + 3);
@@ -136,6 +144,7 @@ namespace ProjectFifaV2
                 pnlPredCard.Controls.Add(txtHomePred);
                 pnlPredCard.Controls.Add(txtAwayPred);
                 pnlPredCard.Controls.Add(lblAwayTeam);
+
                 //ListViewItem lstItem = new ListViewItem(dataRowHome["TeamName"].ToString());
                 //lstItem.SubItems.Add(dataRowHome["HomeTeamScore"].ToString());
                 //lstItem.SubItems.Add(dataRowAway["AwayTeamScore"].ToString());

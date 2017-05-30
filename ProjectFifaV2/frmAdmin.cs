@@ -68,15 +68,23 @@ namespace ProjectFifaV2
 
         private void btnLoadData_Click(object sender, EventArgs e)
         {
-            if (txtPath.Text != null)
+            if (txtPath.Text != "")
             {
+                string[] pathSplit = txtPath.Text.Split('\\');
+                int latestIndex = pathSplit.Length - 1;
+
+                string fileName = pathSplit[latestIndex];
+
                 dbh.OpenConnectionToDB();
 
                 SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename='|DataDirectory|\db.mdf';Integrated Security=True;Connect Timeout=30");
                 StreamReader sr = new StreamReader(txtPath.Text);
+
                 string line = sr.ReadLine();
                 string[] value = line.Split(',');
+
                 DataTable dt = new DataTable();
+
                 foreach (string dc in value)
                 {
                     dt.Columns.Add(new DataColumn(dc));
@@ -98,7 +106,20 @@ namespace ProjectFifaV2
                     }
                 }
                 SqlBulkCopy bc = new SqlBulkCopy(con.ConnectionString, SqlBulkCopyOptions.TableLock);
-                bc.DestinationTableName = "TblGames";
+
+                if ( fileName.Contains("teams") )
+                {
+                    bc.DestinationTableName = "TblTeams";
+
+                    MessageHandler.ShowMessage("Teams toegevoegd");
+                }
+                else if ( fileName.Contains("matches") )
+                {
+                    bc.DestinationTableName = "TblGames";
+
+                    MessageHandler.ShowMessage("Matches toegevoegd");
+                }
+
                 bc.BatchSize = dt.Rows.Count;
                 con.Open();
                 bc.WriteToServer(dt);
