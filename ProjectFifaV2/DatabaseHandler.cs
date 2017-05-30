@@ -35,7 +35,10 @@ namespace ProjectFifaV2
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                if (open)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
             finally
             {
