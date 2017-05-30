@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Data.SqlClient;
+using System.IO;
 
 namespace ProjectFifaV2
 {
@@ -67,9 +68,42 @@ namespace ProjectFifaV2
 
         private void btnLoadData_Click(object sender, EventArgs e)
         {
-            if (!(txtPath.Text == null))
+            if (txtPath.Text != null)
             {
                 dbh.OpenConnectionToDB();
+
+                SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename='|DataDirectory|\db.mdf';Integrated Security=True;Connect Timeout=30");
+                StreamReader sr = new StreamReader(txtPath.Text);
+                string line = sr.ReadLine();
+                string[] value = line.Split(',');
+                DataTable dt = new DataTable();
+                foreach (string dc in value)
+                {
+                    dt.Columns.Add(new DataColumn(dc));
+                }
+
+                while (!sr.EndOfStream)
+                {
+                    value = sr.ReadLine().Split(',');
+                    if (value.Length == dt.Columns.Count)
+                    {
+                        DataRow row = dt.NewRow();
+                        row.ItemArray = value;
+                        dt.Rows.Add(row);
+                    }
+                    else
+                    {
+                        MessageHandler.ShowMessage("Amount of columns not consistent");
+                        return;
+                    }
+                }
+                SqlBulkCopy bc = new SqlBulkCopy(con.ConnectionString, SqlBulkCopyOptions.TableLock);
+                bc.DestinationTableName = "TblGames";
+                bc.BatchSize = dt.Rows.Count;
+                con.Open();
+                bc.WriteToServer(dt);
+                bc.Close();
+                con.Close();
 
                 dbh.CloseConnectionToDB();
             }
@@ -78,7 +112,7 @@ namespace ProjectFifaV2
                 MessageHandler.ShowMessage("No filename selected.");
             }
         }
-        
+
         private string GetFilePath()
         {
             string filePath = "";
