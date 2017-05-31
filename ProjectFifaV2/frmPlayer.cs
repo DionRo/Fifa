@@ -77,11 +77,11 @@ namespace ProjectFifaV2
 
                     if (tblPredictionResult > 0)
                     {
-                        MessageHandler.ShowMessage(String.Format("You have deleted {0} results.", tblPredictionResult));
+                        MessageHandler.ShowMessage(String.Format("You have deleted {0} results.", tblPredictionResult), "Result", MessageBoxButtons.OK, MessageBoxIcon.None);
                     }
                     else
                     {
-                        MessageHandler.ShowMessage(String.Format("You didn't delete any rows."));
+                        MessageHandler.ShowMessage(String.Format("You didn't delete any rows."), "Result", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
 
