@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,8 @@ namespace ProjectFifaV2
         private Form frmRanking;
         private DatabaseHandler dbh;
         private string userName;
+        private DataTable userTable;
+        private string[] user;
 
         List<TextBox> txtBoxList;
 
@@ -31,6 +34,18 @@ namespace ProjectFifaV2
             ShowResults();
             ShowScoreCard();
             this.Text = "Welcome " + un;
+
+            string query = String.Format("SELECT * FROM TblUsers WHERE Username = '{0}'", un);
+            userTable = dbh.FillDT(query);
+
+            foreach (DataRow row in userTable.Rows)
+            {
+                user = new string[] {
+                    row["Id"].ToString(),
+                    row["Username"].ToString(),
+                    row["IsAdmin"].ToString(),
+                };
+            }
         }
 
         private void btnLogOut_Click(object sender, EventArgs e)
@@ -49,6 +64,27 @@ namespace ProjectFifaV2
             if (result.Equals(DialogResult.OK))
             {
                 // Clear predections
+                int user_id = int.Parse(user[0]);
+
+                string query = String.Format("DELETE FROM TblPredictions WHERE User_id = '{0}'", user[0]);
+                using (SqlCommand cmd = new SqlCommand(query, dbh.GetCon()))
+                {
+                    dbh.TestConnection();
+
+                    dbh.OpenConnectionToDB();
+                    int tblPredictionResult = cmd.ExecuteNonQuery();
+                    dbh.CloseConnectionToDB();
+
+                    if (tblPredictionResult > 0)
+                    {
+                        MessageHandler.ShowMessage(String.Format("You have deleted {0} results.", tblPredictionResult));
+                    }
+                    else
+                    {
+                        MessageHandler.ShowMessage(String.Format("You didn't delete any rows."));
+                    }
+                }
+
                 // Update DB
             }
         }
@@ -78,8 +114,8 @@ namespace ProjectFifaV2
             dbh.TestConnection();
             dbh.OpenConnectionToDB();
 
-            DataTable hometable = dbh.FillDT("SELECT tblTeams.TeamName, tblGames.HomeTeamScore FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID");
-            DataTable awayTable = dbh.FillDT("SELECT tblTeams.TeamName, tblGames.AwayTeamScore FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID");
+            DataTable hometable = dbh.FillDT("SELECT tblTeams.TeamName, tblGames.HomeTeamScore FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
+            DataTable awayTable = dbh.FillDT("SELECT tblTeams.TeamName, tblGames.AwayTeamScore FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
 
             dbh.CloseConnectionToDB();
 
@@ -102,8 +138,8 @@ namespace ProjectFifaV2
             dbh.TestConnection();
             dbh.OpenConnectionToDB();
 
-            DataTable hometable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID");
-            DataTable awayTable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID");
+            DataTable hometable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID  ORDER BY TblGames.Game_id");
+            DataTable awayTable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID  ORDER BY TblGames.Game_id");
 
             dbh.CloseConnectionToDB();
             txtBoxList = new List<TextBox>();

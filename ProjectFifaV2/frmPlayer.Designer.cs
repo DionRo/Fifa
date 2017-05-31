@@ -44,7 +44,7 @@
             // btnEditPrediction
             // 
             this.btnEditPrediction.Location = new System.Drawing.Point(485, 107);
-            this.btnEditPrediction.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnEditPrediction.Margin = new System.Windows.Forms.Padding(4);
             this.btnEditPrediction.Name = "btnEditPrediction";
             this.btnEditPrediction.Size = new System.Drawing.Size(141, 37);
             this.btnEditPrediction.TabIndex = 1;
@@ -54,7 +54,7 @@
             // btnClearPrediction
             // 
             this.btnClearPrediction.Location = new System.Drawing.Point(485, 167);
-            this.btnClearPrediction.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnClearPrediction.Margin = new System.Windows.Forms.Padding(4);
             this.btnClearPrediction.Name = "btnClearPrediction";
             this.btnClearPrediction.Size = new System.Drawing.Size(141, 37);
             this.btnClearPrediction.TabIndex = 2;
@@ -65,7 +65,7 @@
             // btnLogOut
             // 
             this.btnLogOut.Location = new System.Drawing.Point(485, 234);
-            this.btnLogOut.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnLogOut.Margin = new System.Windows.Forms.Padding(4);
             this.btnLogOut.Name = "btnLogOut";
             this.btnLogOut.Size = new System.Drawing.Size(141, 37);
             this.btnLogOut.TabIndex = 3;
@@ -86,7 +86,7 @@
             // btnShowRanking
             // 
             this.btnShowRanking.Location = new System.Drawing.Point(485, 47);
-            this.btnShowRanking.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnShowRanking.Margin = new System.Windows.Forms.Padding(4);
             this.btnShowRanking.Name = "btnShowRanking";
             this.btnShowRanking.Size = new System.Drawing.Size(141, 37);
             this.btnShowRanking.TabIndex = 6;
@@ -102,7 +102,7 @@
             this.clmAwayTeamScore,
             this.clmAwayTeam});
             this.lvOverview.Location = new System.Drawing.Point(635, 44);
-            this.lvOverview.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.lvOverview.Margin = new System.Windows.Forms.Padding(4);
             this.lvOverview.Name = "lvOverview";
             this.lvOverview.Size = new System.Drawing.Size(412, 738);
             this.lvOverview.TabIndex = 7;
@@ -133,8 +133,10 @@
             // 
             // pnlPredCard
             // 
+            this.pnlPredCard.AccessibleRole = System.Windows.Forms.AccessibleRole.ScrollBar;
+            this.pnlPredCard.AutoScroll = true;
             this.pnlPredCard.Location = new System.Drawing.Point(16, 44);
-            this.pnlPredCard.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pnlPredCard.Margin = new System.Windows.Forms.Padding(4);
             this.pnlPredCard.Name = "pnlPredCard";
             this.pnlPredCard.Size = new System.Drawing.Size(461, 737);
             this.pnlPredCard.TabIndex = 8;
@@ -151,7 +153,7 @@
             this.Controls.Add(this.btnLogOut);
             this.Controls.Add(this.btnClearPrediction);
             this.Controls.Add(this.btnEditPrediction);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "frmPlayer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "PlayerName";
