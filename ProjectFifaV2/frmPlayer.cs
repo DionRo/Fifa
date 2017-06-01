@@ -15,8 +15,11 @@ namespace ProjectFifaV2
         private Form frmRanking;
         private DatabaseHandler dbh;
         private string userName;
+
         private DataTable userTable;
         private string[] user;
+        private TextBox[,] predictions;
+        private int[] matchId;
 
         List<TextBox> txtBoxList;
 
@@ -109,6 +112,8 @@ namespace ProjectFifaV2
             return hasPassed;
         }
 
+        // Dit is de rechtse kolom
+
         private void ShowResults()
         {
             dbh.TestConnection();
@@ -133,16 +138,22 @@ namespace ProjectFifaV2
             }
         }
 
+
+        // Dit is de linkste kolom
+        
         private void ShowScoreCard()
         {
             dbh.TestConnection();
             dbh.OpenConnectionToDB();
 
-            DataTable hometable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID  ORDER BY TblGames.Game_id");
-            DataTable awayTable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID  ORDER BY TblGames.Game_id");
+            DataTable hometable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
+            DataTable awayTable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
 
             dbh.CloseConnectionToDB();
             txtBoxList = new List<TextBox>();
+
+            predictions = new TextBox[hometable.Rows.Count, 2];
+            matchId = new int[hometable.Rows.Count];
 
             for (int i = 0; i < hometable.Rows.Count; i++)
             {
@@ -151,6 +162,7 @@ namespace ProjectFifaV2
 
                 Label lblHomeTeam = new Label();
                 Label lblAwayTeam = new Label();
+
                 TextBox txtHomePred = new TextBox();
                 TextBox txtAwayPred = new TextBox();
 
@@ -162,12 +174,13 @@ namespace ProjectFifaV2
                 lblHomeTeam.Location = new Point(15, txtHomePred.Bottom + (i * 30));
                 lblHomeTeam.AutoSize = true;
 
-                txtHomePred.Text = "0";
+                txtHomePred.Text = "1";
                 txtHomePred.Location = new Point(lblHomeTeam.Width, lblHomeTeam.Top - 3);
                 txtHomePred.Width = 40;
                 txtHomePred.Tag = dataRowHome["Game_id"].ToString();
+                predictions[i, 0] = txtHomePred;
 
-                txtAwayPred.Text = "0";
+                txtAwayPred.Text = "1";
                 txtAwayPred.Location = new Point(txtHomePred.Width + lblHomeTeam.Width, txtHomePred.Top);
                 txtAwayPred.Width = 40;
                 txtAwayPred.Tag = dataRowAway["Game_id"].ToString();
@@ -175,6 +188,9 @@ namespace ProjectFifaV2
                 lblAwayTeam.Text = dataRowAway["TeamName"].ToString();
                 lblAwayTeam.Location = new Point(txtHomePred.Width + lblHomeTeam.Width + txtAwayPred.Width, txtHomePred.Top + 3);
                 lblAwayTeam.AutoSize = true;
+                predictions[i, 1] = txtAwayPred;
+
+                matchId[i] = int.Parse(dataRowHome["Game_id"].ToString());
 
                 pnlPredCard.Controls.Add(lblHomeTeam);
                 pnlPredCard.Controls.Add(txtHomePred);
@@ -188,10 +204,34 @@ namespace ProjectFifaV2
                 //lvOverview.Items.Add(lstItem);
             }
         }
+        private void btnEditPrediction_Click(object sender, EventArgs e)
+        {
+            DataTable games = dbh.FillDT("SELECT * FROM TblGames");
+
+            for (int i = 0; i < games.Rows.Count; i++)
+            {
+                using (SqlCommand cmd = new SqlCommand("INSERT INTO TblPredictions (User_id, Game_id, PredictedHomeScore, PredictedAwayScore) VALUES (@User_id, @Game_id, @PredictedHomeScore, @PredictedAwayScore)", dbh.GetCon()))
+                {
+                    cmd.Parameters.AddWithValue("User_id", user[0]);
+                    cmd.Parameters.AddWithValue("Game_id", matchId[i]);
+                    cmd.Parameters.AddWithValue("PredictedHomeScore", predictions[i, 0].Text);
+                    cmd.Parameters.AddWithValue("PredictedAwayScore", predictions[i, 1].Text);
+
+                    dbh.TestConnection();
+                    dbh.OpenConnectionToDB();
+
+                    cmd.ExecuteNonQuery();
+
+                    dbh.CloseConnectionToDB();
+                }
+            }
+
+
+        }
 
         internal void GetUsername(string un)
         {
             userName = un;
-        }
+        }        
     }
 }
