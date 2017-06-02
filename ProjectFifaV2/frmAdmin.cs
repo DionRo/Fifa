@@ -46,7 +46,17 @@ namespace ProjectFifaV2
         {
             dbh.TestConnection();
             SqlDataAdapter dataAdapter = new SqlDataAdapter(selectCommandText, dbh.GetCon());
-            dataAdapter.Fill(table);
+
+            try
+            {
+                dataAdapter.Fill(table);
+            }
+            catch (System.Data.SqlClient.SqlException)
+            {
+                MessageHandler.ShowMessage("Unknown SQL command", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            
             dgvAdminData.DataSource = table;
         }
 
@@ -91,6 +101,11 @@ namespace ProjectFifaV2
                 catch (System.IO.FileNotFoundException exep)
                 {
                     MessageHandler.ShowMessage(string.Format("Couldn't find the file..", exep));
+                    success = false;
+                }
+                catch (System.ArgumentException exep)
+                {
+                    MessageHandler.ShowMessage("Unkown path", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     success = false;
                 }
 

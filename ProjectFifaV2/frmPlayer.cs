@@ -258,7 +258,14 @@ namespace ProjectFifaV2
                         dbh.TestConnection();
                         dbh.OpenConnectionToDB();
 
-                        cmd.ExecuteNonQuery();
+                        try
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                        catch (System.Data.SqlClient.SqlException)
+                        {
+                            MessageHandler.ShowMessage("Something went wrong", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
 
                         dbh.CloseConnectionToDB();
                     }
@@ -275,7 +282,14 @@ namespace ProjectFifaV2
                         dbh.TestConnection();
                         dbh.OpenConnectionToDB();
 
-                        cmd.ExecuteNonQuery();
+                        try
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                        catch (System.Data.SqlClient.SqlException)
+                        {
+                            MessageHandler.ShowMessage("Something went wrong", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
 
                         dbh.CloseConnectionToDB();
                     }
