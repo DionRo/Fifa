@@ -72,66 +72,110 @@ namespace ProjectFifaV2
             {
                 string[] pathSplit = txtPath.Text.Split('\\');
                 int latestIndex = pathSplit.Length - 1;
+                StreamReader sr;
+                bool success = true;
 
                 string fileName = pathSplit[latestIndex];
 
                 dbh.OpenConnectionToDB();
 
-                SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename='|DataDirectory|\db.mdf';Integrated Security=True;Connect Timeout=30");
-                StreamReader sr = new StreamReader(txtPath.Text);
-
-                string line = sr.ReadLine();
-                string[] value = line.Split(',');
-
-                DataTable dt = new DataTable();
-
-                foreach (string dc in value)
+                try
                 {
-                    dt.Columns.Add(new DataColumn(dc));
+                    sr = new StreamReader(txtPath.Text);
+                }
+                catch (System.IO.DirectoryNotFoundException exep)
+                {
+                    MessageHandler.ShowMessage(string.Format("Couldn't find the directory..", exep));
+                    success = false;
+                }
+                catch (System.IO.FileNotFoundException exep)
+                {
+                    MessageHandler.ShowMessage(string.Format("Couldn't find the file..", exep));
+                    success = false;
                 }
 
-                while (!sr.EndOfStream)
+                if (success)
                 {
-                    value = sr.ReadLine().Split(',');
-                    if (value.Length == dt.Columns.Count)
+                    sr = new StreamReader(txtPath.Text);
+
+                    string line = sr.ReadLine();
+                    string[] value = line.Split(',');
+
+                    DataTable dt = new DataTable();
+
+                    foreach (string dc in value)
                     {
-                        DataRow row = dt.NewRow();
-                        row.ItemArray = value;
-                        dt.Rows.Add(row);
+                        dt.Columns.Add(new DataColumn(dc));
+                    }
+
+                    while (!sr.EndOfStream)
+                    {
+                        value = sr.ReadLine().Split(',');
+                        if (value.Length == dt.Columns.Count)
+                        {
+                            DataRow row = dt.NewRow();
+                            row.ItemArray = value;
+                            dt.Rows.Add(row);
+                        }
+                        else
+                        {
+                            MessageHandler.ShowMessage("Amount of columns not consistent");
+                            return;
+                        }
+                    }
+
+                    SqlBulkCopy bc = new SqlBulkCopy(dbh.GetCon().ConnectionString, SqlBulkCopyOptions.TableLock);
+
+                    if (!fileName.Contains("csv"))
+                    {
+                        MessageHandler.ShowMessage("This isn't a CSV file", "CSV Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    else if (fileName.Contains("teams"))
+                    {
+                        bc.DestinationTableName = "TblTeams";
+
+                        using (SqlCommand cmd = new SqlCommand("TRUNCATE TABLE TblTeams", dbh.GetCon()))
+                        {
+                            dbh.TestConnection();
+                            dbh.OpenConnectionToDB();
+
+                            cmd.ExecuteNonQuery();
+
+                            dbh.CloseConnectionToDB();
+                        }
+
+                        MessageHandler.ShowMessage("Teams toegevoegd");
+                    }
+                    else if (fileName.Contains("matches"))
+                    {
+                        bc.DestinationTableName = "TblGames";
+
+                        using (SqlCommand cmd = new SqlCommand("TRUNCATE TABLE TblGames", dbh.GetCon()))
+                        {
+                            dbh.TestConnection();
+                            dbh.OpenConnectionToDB();
+
+                            cmd.ExecuteNonQuery();
+
+                            dbh.CloseConnectionToDB();
+                        }
+
+                        MessageHandler.ShowMessage("Matches toegevoegd");
                     }
                     else
                     {
-                        MessageHandler.ShowMessage("Amount of columns not consistent");
-                        return;
+                        MessageHandler.ShowMessage("There was no matching Table found for this csv file", "CSV Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+
+                    bc.BatchSize = dt.Rows.Count;
+                    bc.WriteToServer(dt);
+                    bc.Close();
+
                 }
-                SqlBulkCopy bc = new SqlBulkCopy(con.ConnectionString, SqlBulkCopyOptions.TableLock);
-
-                if ( fileName.Contains("teams") )
-                {
-                    bc.DestinationTableName = "TblTeams";
-
-                    MessageHandler.ShowMessage("Teams toegevoegd");
-                }
-                else if ( fileName.Contains("matches") )
-                {
-                    bc.DestinationTableName = "TblGames";
-
-                    MessageHandler.ShowMessage("Matches toegevoegd");
-                }
-
-                bc.BatchSize = dt.Rows.Count;
-                con.Open();
-                bc.WriteToServer(dt);
-                bc.Close();
-                con.Close();
-
-                dbh.CloseConnectionToDB();
             }
-            else
-            {
-                MessageHandler.ShowMessage("No filename selected.");
-            }
+
+            dbh.CloseConnectionToDB();
+
         }
 
         private string GetFilePath()

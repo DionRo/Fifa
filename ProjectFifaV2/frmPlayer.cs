@@ -29,15 +29,6 @@ namespace ProjectFifaV2
             frmRanking = frm;
             dbh = new DatabaseHandler();
 
-            InitializeComponent();
-            if (DisableEditButton())
-            {
-                btnEditPrediction.Enabled = false;
-            }
-            ShowResults();
-            ShowScoreCard();
-            this.Text = "Welcome " + un;
-
             string query = String.Format("SELECT * FROM TblUsers WHERE Username = '{0}'", un);
             userTable = dbh.FillDT(query);
 
@@ -49,6 +40,17 @@ namespace ProjectFifaV2
                     row["IsAdmin"].ToString(),
                 };
             }
+
+            InitializeComponent();
+            if (DisableEditButton())
+            {
+                btnEditPrediction.Enabled = false;
+            }
+            ShowResults();
+            ShowScoreCard();
+            this.Text = "Welcome " + un;
+
+            
         }
 
         private void btnLogOut_Click(object sender, EventArgs e)
@@ -146,8 +148,12 @@ namespace ProjectFifaV2
             dbh.TestConnection();
             dbh.OpenConnectionToDB();
 
-            DataTable hometable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
-            DataTable awayTable = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
+            DataTable hometable         = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.HomeTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
+            DataTable awayTable         = dbh.FillDT("SELECT tblGames.Game_id, tblTeams.TeamName FROM tblGames INNER JOIN tblTeams ON tblGames.AwayTeam = tblTeams.Team_ID ORDER BY TblGames.Game_id");
+            DataTable oldPredictions    = dbh.FillDT(String.Format("SELECT PredictedHomeScore, PredictedAwayScore FROM TblPredictions WHERE User_id = {0}", int.Parse(user[0])));
+            DataTable games             = dbh.FillDT("SELECT Game_id FROM TblGames WHERE isPlayed = 1");
+
+            MessageHandler.ShowMessage(games.Rows.Count.ToString());
 
             dbh.CloseConnectionToDB();
             txtBoxList = new List<TextBox>();
@@ -159,7 +165,20 @@ namespace ProjectFifaV2
             {
                 DataRow dataRowHome = hometable.Rows[i];
                 DataRow dataRowAway = awayTable.Rows[i];
+                DataRow dataRowPredictions;
 
+                bool isPlayed = false;
+
+                matchId[i] = int.Parse(dataRowHome["Game_id"].ToString());
+
+                foreach (DataRow game in games.Rows)
+                {
+                    if (game["Game_id"].ToString() == matchId[i].ToString())
+                    {
+                        isPlayed = true;
+                    }
+                }
+                
                 Label lblHomeTeam = new Label();
                 Label lblAwayTeam = new Label();
 
@@ -169,18 +188,29 @@ namespace ProjectFifaV2
                 txtBoxList.Add(txtHomePred);
                 txtBoxList.Add(txtAwayPred);
 
+                if (oldPredictions.Rows.Count > 0)
+                {
+                    dataRowPredictions = oldPredictions.Rows[i];
+
+                    txtHomePred.Text = dataRowPredictions["PredictedHomeScore"].ToString();
+                    txtAwayPred.Text = dataRowPredictions["PredictedAwayScore"].ToString();
+                }
+                else
+                {
+                    txtHomePred.Text = "0";
+                    txtAwayPred.Text = "0";
+                }
+
                 lblHomeTeam.TextAlign = ContentAlignment.BottomRight;
                 lblHomeTeam.Text = dataRowHome["TeamName"].ToString();
                 lblHomeTeam.Location = new Point(15, txtHomePred.Bottom + (i * 30));
                 lblHomeTeam.AutoSize = true;
 
-                txtHomePred.Text = "1";
                 txtHomePred.Location = new Point(lblHomeTeam.Width, lblHomeTeam.Top - 3);
                 txtHomePred.Width = 40;
                 txtHomePred.Tag = dataRowHome["Game_id"].ToString();
                 predictions[i, 0] = txtHomePred;
 
-                txtAwayPred.Text = "1";
                 txtAwayPred.Location = new Point(txtHomePred.Width + lblHomeTeam.Width, txtHomePred.Top);
                 txtAwayPred.Width = 40;
                 txtAwayPred.Tag = dataRowAway["Game_id"].ToString();
@@ -190,12 +220,17 @@ namespace ProjectFifaV2
                 lblAwayTeam.AutoSize = true;
                 predictions[i, 1] = txtAwayPred;
 
-                matchId[i] = int.Parse(dataRowHome["Game_id"].ToString());
-
                 pnlPredCard.Controls.Add(lblHomeTeam);
                 pnlPredCard.Controls.Add(txtHomePred);
                 pnlPredCard.Controls.Add(txtAwayPred);
                 pnlPredCard.Controls.Add(lblAwayTeam);
+
+                if (isPlayed)
+                {
+                    txtAwayPred.Enabled = false;
+                    txtHomePred.Enabled = false;
+                }
+                
 
                 //ListViewItem lstItem = new ListViewItem(dataRowHome["TeamName"].ToString());
                 //lstItem.SubItems.Add(dataRowHome["HomeTeamScore"].ToString());
@@ -206,24 +241,46 @@ namespace ProjectFifaV2
         }
         private void btnEditPrediction_Click(object sender, EventArgs e)
         {
-            DataTable games = dbh.FillDT("SELECT * FROM TblGames");
+            DataTable games             = dbh.FillDT("SELECT * FROM TblGames");
+            DataTable savedPredictions  = dbh.FillDT(string.Format("SELECT * FROM TblPredictions WHERE User_id = '{0}'", user[0]));
 
             for (int i = 0; i < games.Rows.Count; i++)
             {
-                using (SqlCommand cmd = new SqlCommand("INSERT INTO TblPredictions (User_id, Game_id, PredictedHomeScore, PredictedAwayScore) VALUES (@User_id, @Game_id, @PredictedHomeScore, @PredictedAwayScore)", dbh.GetCon()))
+                if (savedPredictions.Rows.Count == 0)
                 {
-                    cmd.Parameters.AddWithValue("User_id", user[0]);
-                    cmd.Parameters.AddWithValue("Game_id", matchId[i]);
-                    cmd.Parameters.AddWithValue("PredictedHomeScore", predictions[i, 0].Text);
-                    cmd.Parameters.AddWithValue("PredictedAwayScore", predictions[i, 1].Text);
+                    using (SqlCommand cmd = new SqlCommand("INSERT INTO TblPredictions (User_id, Game_id, PredictedHomeScore, PredictedAwayScore) VALUES (@User_id, @Game_id, @PredictedHomeScore, @PredictedAwayScore)", dbh.GetCon()))
+                    {
+                        cmd.Parameters.AddWithValue("User_id",              user[0]);
+                        cmd.Parameters.AddWithValue("Game_id",              matchId[i]);
+                        cmd.Parameters.AddWithValue("PredictedHomeScore",   predictions[i, 0].Text);
+                        cmd.Parameters.AddWithValue("PredictedAwayScore",   predictions[i, 1].Text);
 
-                    dbh.TestConnection();
-                    dbh.OpenConnectionToDB();
+                        dbh.TestConnection();
+                        dbh.OpenConnectionToDB();
 
-                    cmd.ExecuteNonQuery();
+                        cmd.ExecuteNonQuery();
 
-                    dbh.CloseConnectionToDB();
+                        dbh.CloseConnectionToDB();
+                    }
                 }
+                else
+                {
+                    using (SqlCommand cmd = new SqlCommand("UPDATE TblPredictions SET PredictedHomeScore = @PredictedHomeScore, PredictedAwayScore = @PredictedAwayScore WHERE User_id = @User_id AND Game_id = @Game_id", dbh.GetCon()))
+                    {
+                        cmd.Parameters.AddWithValue("@PredictedHomeScore",  predictions[i, 0].Text);
+                        cmd.Parameters.AddWithValue("@PredictedAwayScore",  predictions[i, 1].Text);
+                        cmd.Parameters.AddWithValue("@User_id",             user[0]);
+                        cmd.Parameters.AddWithValue("@Game_id",             matchId[i]);
+
+                        dbh.TestConnection();
+                        dbh.OpenConnectionToDB();
+
+                        cmd.ExecuteNonQuery();
+
+                        dbh.CloseConnectionToDB();
+                    }
+                }
+
             }
 
 
