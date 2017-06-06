@@ -153,8 +153,6 @@ namespace ProjectFifaV2
             DataTable oldPredictions    = dbh.FillDT(String.Format("SELECT PredictedHomeScore, PredictedAwayScore FROM TblPredictions WHERE User_id = {0}", int.Parse(user[0])));
             DataTable games             = dbh.FillDT("SELECT Game_id FROM TblGames WHERE isPlayed = 1");
 
-            MessageHandler.ShowMessage(games.Rows.Count.ToString());
-
             dbh.CloseConnectionToDB();
             txtBoxList = new List<TextBox>();
 
@@ -248,12 +246,18 @@ namespace ProjectFifaV2
             {
                 if (savedPredictions.Rows.Count == 0)
                 {
-                    using (SqlCommand cmd = new SqlCommand("INSERT INTO TblPredictions (User_id, Game_id, PredictedHomeScore, PredictedAwayScore) VALUES (@User_id, @Game_id, @PredictedHomeScore, @PredictedAwayScore)", dbh.GetCon()))
+                    using (SqlCommand cmd = new SqlCommand("INSERT INTO TblPredictions (User_id, Game_id, HomeTeam, AWayTeam, PredictedHomeScore, PredictedAwayScore) VALUES (@User_id, @Game_id, @HomeTeam, @AwayTeam, @PredictedHomeScore, @PredictedAwayScore)", dbh.GetCon()))
                     {
                         cmd.Parameters.AddWithValue("User_id",              user[0]);
                         cmd.Parameters.AddWithValue("Game_id",              matchId[i]);
+                        cmd.Parameters.AddWithValue("HomeTeam",             (int)games.Rows[i]["HomeTeam"]);
+                        cmd.Parameters.AddWithValue("AwayTeam",             (int)games.Rows[i]["AwayTeam"]);
                         cmd.Parameters.AddWithValue("PredictedHomeScore",   predictions[i, 0].Text);
                         cmd.Parameters.AddWithValue("PredictedAwayScore",   predictions[i, 1].Text);
+
+                        //cmd.Parameters.AddWithValue("TeamHomeId", games.Rows[i]["HomeTeam"])
+
+                        int homeTeam = (int)games.Rows[i]["HomeTeam"];
 
                         dbh.TestConnection();
                         dbh.OpenConnectionToDB();
@@ -272,8 +276,10 @@ namespace ProjectFifaV2
                 }
                 else
                 {
-                    using (SqlCommand cmd = new SqlCommand("UPDATE TblPredictions SET PredictedHomeScore = @PredictedHomeScore, PredictedAwayScore = @PredictedAwayScore WHERE User_id = @User_id AND Game_id = @Game_id", dbh.GetCon()))
+                    using (SqlCommand cmd = new SqlCommand("UPDATE TblPredictions SET HomeTeam = @HomeTeam, AwayTeam = @AwayTeam, PredictedHomeScore = @PredictedHomeScore, PredictedAwayScore = @PredictedAwayScore WHERE User_id = @User_id AND Game_id = @Game_id", dbh.GetCon()))
                     {
+                        cmd.Parameters.AddWithValue("HomeTeam",             (int)games.Rows[i]["HomeTeam"]);
+                        cmd.Parameters.AddWithValue("AwayTeam",             (int)games.Rows[i]["AwayTeam"]);
                         cmd.Parameters.AddWithValue("@PredictedHomeScore",  predictions[i, 0].Text);
                         cmd.Parameters.AddWithValue("@PredictedAwayScore",  predictions[i, 1].Text);
                         cmd.Parameters.AddWithValue("@User_id",             user[0]);
@@ -297,6 +303,7 @@ namespace ProjectFifaV2
 
             }
 
+            MessageHandler.ShowMessage("Predictions updated", "Update", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
         }
 

@@ -17,7 +17,6 @@ namespace ProjectFifaV2
             //SqlCeEngine engine = new SqlCeEngine(@"Data Source=.\DB.sdf");
             //engine.Upgrade(@"Data Source=.\DB2.sdf");
 
-
             string Path = Environment.CurrentDirectory;
             string[] appPath = Path.Split(new string[] { "bin" }, StringSplitOptions.None);
             AppDomain.CurrentDomain.SetData("DataDirectory", appPath[0]);
@@ -79,9 +78,40 @@ namespace ProjectFifaV2
             return dt;
         }
 
+        public void TruncateTable(string table)
+        {
+            using (SqlCommand cmd = new SqlCommand(string.Format("TRUNCATE TABLE {0}", table), this.GetCon()))
+            {
+                this.TestConnection();
+                this.OpenConnectionToDB();
+
+                cmd.ExecuteNonQuery();
+
+                this.CloseConnectionToDB();
+            }
+        }
+
+        public void EditRow(string table, string row, string value)
+        {
+            using (SqlCommand cmd = new SqlCommand(string.Format("UPDATE {0} SET {1} = {2}", table, row, value), this.GetCon()))
+            {
+                this.TestConnection();
+                this.OpenConnectionToDB();
+
+                cmd.ExecuteNonQuery();
+
+                this.CloseConnectionToDB();
+            }
+        }
+
         public SqlConnection GetCon()
         {
             return con;
+        }
+
+        public string GetConnectionString()
+        {
+            return con.ConnectionString;
         }
     }
 }

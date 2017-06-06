@@ -93,17 +93,17 @@ namespace ProjectFifaV2
                 {
                     sr = new StreamReader(txtPath.Text);
                 }
-                catch (System.IO.DirectoryNotFoundException exep)
+                catch (System.IO.DirectoryNotFoundException)
                 {
-                    MessageHandler.ShowMessage(string.Format("Couldn't find the directory..", exep));
+                    MessageHandler.ShowMessage(string.Format("Couldn't find the directory."));
                     success = false;
                 }
-                catch (System.IO.FileNotFoundException exep)
+                catch (System.IO.FileNotFoundException)
                 {
-                    MessageHandler.ShowMessage(string.Format("Couldn't find the file..", exep));
+                    MessageHandler.ShowMessage("Couldn't find the file.");
                     success = false;
                 }
-                catch (System.ArgumentException exep)
+                catch (System.ArgumentException)
                 {
                     MessageHandler.ShowMessage("Unkown path", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     success = false;
@@ -139,7 +139,7 @@ namespace ProjectFifaV2
                         }
                     }
 
-                    SqlBulkCopy bc = new SqlBulkCopy(dbh.GetCon().ConnectionString, SqlBulkCopyOptions.TableLock);
+                    SqlBulkCopy bc = new SqlBulkCopy(dbh.GetConnectionString(), SqlBulkCopyOptions.TableLock);
 
                     if (!fileName.Contains("csv"))
                     {
@@ -149,32 +149,14 @@ namespace ProjectFifaV2
                     {
                         bc.DestinationTableName = "TblTeams";
 
-                        using (SqlCommand cmd = new SqlCommand("TRUNCATE TABLE TblTeams", dbh.GetCon()))
-                        {
-                            dbh.TestConnection();
-                            dbh.OpenConnectionToDB();
-
-                            cmd.ExecuteNonQuery();
-
-                            dbh.CloseConnectionToDB();
-                        }
-
+                        dbh.TruncateTable("TblTeams");
                         MessageHandler.ShowMessage("Teams toegevoegd");
                     }
                     else if (fileName.Contains("matches"))
                     {
                         bc.DestinationTableName = "TblGames";
 
-                        using (SqlCommand cmd = new SqlCommand("TRUNCATE TABLE TblGames", dbh.GetCon()))
-                        {
-                            dbh.TestConnection();
-                            dbh.OpenConnectionToDB();
-
-                            cmd.ExecuteNonQuery();
-
-                            dbh.CloseConnectionToDB();
-                        }
-
+                        dbh.TruncateTable("TblGames");
                         MessageHandler.ShowMessage("Matches toegevoegd");
                     }
                     else
@@ -222,6 +204,95 @@ namespace ProjectFifaV2
             else
             {
                 return false;
+            }
+        }
+
+        private void btnCalculate_Click(object sender, EventArgs e)
+        {
+            dbh.EditRow("TblUsers", "Score", "0");
+
+            DataTable playedMatches = dbh.FillDT("SELECT * FROM TblGames WHERE isPlayed = 1");
+
+            if (playedMatches.Rows.Count < 1)
+            {
+                MessageHandler.ShowMessage("Please upload a csv which contains played matches");
+            }
+            else
+            {
+                foreach (DataRow playedMatch in playedMatches.Rows)
+                {
+                    int gameId = (int)playedMatch["Game_id"];
+
+                    DataTable predictions = dbh.FillDT(string.Format("SELECT * FROM TblPredictions WHERE Game_id = {0}", gameId));
+
+                    int homeTeam = (int)playedMatch["HomeTeam"];
+                    int awayTeam = (int)playedMatch["AwayTeam"];
+                    int scoreHomeTeam = (int)playedMatch["HomeTeamScore"];
+                    int scoreAwayTeam = (int)playedMatch["AwayTeamScore"];
+                    int? winningTeam = null;
+                    int tie = 0;
+
+                    if (scoreHomeTeam > scoreAwayTeam)
+                    {
+                        winningTeam = homeTeam;
+                    }
+                    else if (scoreAwayTeam > scoreHomeTeam)
+                    {
+                        winningTeam = awayTeam;
+                    }
+                    else if (scoreHomeTeam == scoreAwayTeam)
+                    {
+                        tie = 1;
+                    }
+
+                    foreach (DataRow prediction in predictions.Rows)
+                    {
+                        int score = 0;
+
+                        int predictedHomeTeam = (int)prediction["HomeTeam"];
+                        int predictedAwayTeam = (int)prediction["AwayTeam"];
+                        int predictedHomeTeamScore = (int)prediction["PredictedHomeScore"];
+                        int predictedAwayTeamScore = (int)prediction["PredictedAwayScore"];
+
+                        int? predictedWinningTeam = null;
+
+                        if (predictedHomeTeamScore > predictedAwayTeamScore)
+                        {
+                            predictedWinningTeam = predictedHomeTeam;
+                        }
+                        else if (predictedAwayTeamScore > predictedHomeTeamScore)
+                        {
+                            predictedWinningTeam = predictedAwayTeam;
+                        }
+
+                        if (predictedHomeTeamScore == scoreHomeTeam && predictedAwayTeamScore == scoreAwayTeam)
+                        {
+                            score = 3;
+                        }
+                        else if (winningTeam != null && tie == 0 && predictedWinningTeam != null)
+                        {
+                            if (winningTeam == predictedWinningTeam)
+                            {
+                                score = 1;
+                            }
+                        }
+
+                        MessageHandler.ShowMessage(score.ToString());
+
+                        using (SqlCommand cmd = new SqlCommand("UPDATE TblUsers SET Score = Score + @Score WHERE Id = @Id", dbh.GetCon()))
+                        {
+                            cmd.Parameters.AddWithValue("Score", score);
+                            cmd.Parameters.AddWithValue("Id", prediction["User_id"]);
+
+                            dbh.TestConnection();
+                            dbh.OpenConnectionToDB();
+
+                            cmd.ExecuteNonQuery();
+
+                            dbh.CloseConnectionToDB();
+                        }
+                    }
+                }
             }
         }
     }
